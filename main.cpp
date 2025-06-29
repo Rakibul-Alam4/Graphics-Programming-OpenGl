@@ -1,76 +1,79 @@
-/*Bresenham's Midpoint Incremental Line Drawing algorithm*/
 #include<windows.h>
-#include<iostream>
-#include<math.h>
-#include <stdio.h>
-#include<GL/gl.h>
-#include <GL/glut.h>
 
-using namespace std;
+#include<GL/glut.h>
 
-int X1, Y1, X2, Y2;
 
-void midpoint(void)
+float x1=-2.0,x2=2.0;
+static int flag=1;
+void initRendering()
 {
-    double dx=(X2-X1),dy=(Y2-Y1),de,dne,ds,dnew,dold,d;
-    float x=X1,y=Y1;
-    ds=(2*dy)-dx;
-    de=2*dy;
-    dne=2*(dy-dx);
-    dnew=ds;
-    dold=0;
-    d=dnew-dold;
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glBegin(GL_POINTS);
-
-    glVertex2d(x,y);
-
-     while(X2>x)
-    {
-        if(d>0)
-        {
-            x+=1;
-            y+=1;
-            dold=dnew;
-            dnew+=dne;
-        }
-        else
-        {
-            x+=1;
-            dold=dnew;
-            dnew+=de;
-        }
-        glVertex2d(x,y);
-    }
-    glEnd();
-
-    glFlush();
+    glEnable(GL_DEPTH_TEST);
 }
-void myInit (void)
+
+void reshape(int w,int h)
 {
-    glClearColor(1.0, 1.0, 1.0, 0.0);
-    glColor3f(0.0f, 0.0f, 0.0f);
-    glPointSize(4.0);
+    glViewport(0,0,w,h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(-100.0, 640.0,-100.0, 640.0);  //    gluOrtho2D(0.0, 640.0,0.0, 480.0);
+    gluPerspective(45,w/h,1,200);
+
 }
 
-int main(int argc, char** argv)
+void drawBall1()
 {
-    glutInit(&argc, argv);
-    glutInitDisplayMode (GLUT_SINGLE | GLUT_RGB);
-    glutInitWindowSize (640, 640);
-    glutInitWindowPosition (100, 100);
-    glutCreateWindow ("Bresenham's Midpoint incremental Line drawing");
-    cout<<"Enter the initial points:\t";
-    cin>>X1;
-    cin>>Y1;
-    cout<<"Enter the final points:\t";
-    cin>>X2;
-    cin>>Y2;
-    glutDisplayFunc(midpoint);
-    myInit ();
+    glColor3f(1.0,0.0,0.0);
+    glPushMatrix();
+    glTranslatef(x1,0.0,-5.0);
+    glutSolidSphere(0.4,20,20);
+    glPopMatrix();
+}
+
+void drawBall2()
+{
+    glColor3f(0.0,0.0,1.0);
+    glPushMatrix();
+    glTranslatef(x2,0.0,-5.0);
+    glutSolidSphere(0.4,20,20);
+    glPopMatrix();
+}
+void update()
+{
+    if(flag)
+        {
+            x1+=0.005;
+            x2-=0.005;
+            if(x1>-0.35)
+                flag=0;
+        }
+    if(!flag)
+    {
+        x1-=0.005;
+        x2+=0.005;
+        if(x1<-2.0)
+            flag=1;
+    }
+}
+void display()
+{
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    //glShadeModel(GL_SMOOTH);
+    drawBall1();
+    drawBall2();
+    update();
+    glutSwapBuffers();
+}
+int main(int argc,char **argv)
+{
+    glutInit(&argc,argv);
+    glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB|GLUT_DEPTH);
+    glutInitWindowSize(400,400);
+    glutCreateWindow("Collision Window");
+    initRendering();
+    glutDisplayFunc(display);
+    glutIdleFunc(display);
+    glutReshapeFunc(reshape);
     glutMainLoop();
+    return(0);
 }
